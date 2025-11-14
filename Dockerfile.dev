@@ -10,28 +10,27 @@ RUN npm --no-update-notifier --no-fund --global install pnpm@10.6.1 pm2
 
 WORKDIR /app
 
-# Copy only the files needed for dependency installation to leverage Docker caching
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-COPY apps/backend/package.json ./apps/backend/
-COPY apps/frontend/package.json ./apps/frontend/
-COPY apps/cron/package.json ./apps/cron/
-COPY apps/commands/package.json ./apps/commands/
-COPY apps/extension/package.json ./apps/extension/
-COPY apps/sdk/package.json ./apps/sdk/
-COPY apps/workers/package.json ./apps/workers/
-COPY libraries/nestjs-libraries/package.json ./libraries/nestjs-libraries/
-COPY libraries/react-shared-libraries/package.json ./libraries/react-shared-libraries/
+# Copy workspace root files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Install dependencies. This layer will be cached as long as package files don't change.
+# Copy all workspace package.json files
+COPY apps ./apps
+COPY libraries ./libraries
+
+# Keep only package.json files and remove source code temporarily
+RUN find apps libraries -type f ! -name 'package.json' -delete
+RUN find apps libraries -type d -empty -delete
+
+# Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Now copy the rest of the application source code
+# Now copy the complete source code
 COPY . .
 
-# Copy nginx config
+# Copy nginx config  
 COPY var/docker/nginx.conf /etc/nginx/nginx.conf
 
-# Explicitly run prisma generate to ensure the correct binaries are available
+# Generate Prisma client
 RUN pnpm run prisma-generate
 
 # Build the application

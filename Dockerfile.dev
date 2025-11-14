@@ -17,8 +17,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps ./apps
 COPY libraries ./libraries
 
-# Keep only package.json files and remove source code temporarily
-RUN find apps libraries -type f ! -name 'package.json' -delete
+# Keep only package.json files and Prisma schema, remove other source code temporarily
+RUN find apps libraries -type f ! -name 'package.json' ! -name 'schema.prisma' -delete
 RUN find apps libraries -type d -empty -delete
 
 # Install dependencies
@@ -30,7 +30,7 @@ COPY . .
 # Copy nginx config  
 COPY var/docker/nginx.conf /etc/nginx/nginx.conf
 
-# Generate Prisma client
+# Generate Prisma client (explicit call to ensure it's generated with full schema)
 RUN pnpm run prisma-generate
 
 # Build the application

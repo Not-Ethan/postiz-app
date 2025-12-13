@@ -10,8 +10,8 @@ RUN npm --no-update-notifier --no-fund --global install pnpm@10.6.1 pm2
 
 WORKDIR /app
 
-# Copy workspace root files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# Copy workspace root files (include .npmrc so pnpm config matches lockfile)
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 
 # Copy all workspace package.json files
 COPY apps ./apps

@@ -84,12 +84,14 @@ class CloudflareStorage implements IUploadProvider {
     const extension = mime.extension(file.mimetype) || '';
 
     // Create the PutObjectCommand to upload the file to Cloudflare R2
-    const command = new PutObjectCommand({
-      Bucket: this._bucketName,
-      ACL: 'public-read',
-      Key: `${id}.${extension}`,
-      Body: file.buffer,
-    });
+  const command = new PutObjectCommand({
+    Bucket: this._bucketName,
+    Key: `${id}.${extension}`,
+    Body: file.buffer,
+    ContentType: file.mimetype,
+    ACL: 'public-read',
+  });
+
 
     await this._client.send(command);
 

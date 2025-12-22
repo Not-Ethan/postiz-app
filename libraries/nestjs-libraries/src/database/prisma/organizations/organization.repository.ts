@@ -10,7 +10,8 @@ export class OrganizationRepository {
   constructor(
     private _organization: PrismaRepository<'organization'>,
     private _userOrg: PrismaRepository<'userOrganization'>,
-    private _user: PrismaRepository<'user'>
+    private _user: PrismaRepository<'user'>,
+    private _userPermissions: PrismaRepository<'userOrganizationIntegration'>
   ) {}
 
   getOrgByApiKey(api: string) {
@@ -133,6 +134,12 @@ export class OrganizationRepository {
           select: {
             disabled: true,
             role: true,
+            id: true,
+            pagePermissions: {
+              select: {
+                integrationId: true,
+              },
+            },
           },
         },
         subscription: {
@@ -268,11 +275,18 @@ export class OrganizationRepository {
       select: {
         users: {
           select: {
+            id: true,
             role: true,
+            pagePermissions: {
+              select: {
+                integrationId: true,
+              },
+            },
             user: {
               select: {
                 email: true,
                 id: true,
+                name: true,
               },
             },
           },
@@ -322,6 +336,132 @@ export class OrganizationRepository {
       },
       data: {
         disabled: disable,
+      },
+    });
+  }
+
+  async createOrgForExistingUser(userId: string, name: string) {
+    return this._organization.model.organization.create({
+      data: {
+        name,
+        apiKey: AuthService.fixedEncryption(makeId(20)),
+        allowTrial: true,
+        isTrailing: true,
+        users: {
+          create: {
+            role: Role.SUPERADMIN,
+            user: {
+              connect: {
+                id: userId,
+              },
+            },
+          },
+        },
+      },
+      include: {
+        users: {
+          where: {
+            userId,
+          },
+        },
+      },
+    });
+  }
+
+  async joinOrganization(userId: string, organizationId: string) {
+    const existing = await this._userOrg.model.userOrganization.findFirst({
+      where: {
+        userId,
+        organizationId,
+      },
+    });
+
+    if (existing) {
+      return existing;
+    }
+
+    return this._userOrg.model.userOrganization.create({
+      data: {
+        role: Role.USER,
+        organizationId,
+        userId,
+      },
+    });
+  }
+
+  async addExistingUserByEmail(orgId: string, email: string, role: Role) {
+    const user = await this._user.model.user.findFirst({
+      where: {
+        email,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    const existing = await this._userOrg.model.userOrganization.findFirst({
+      where: {
+        userId: user.id,
+        organizationId: orgId,
+      },
+    });
+
+    if (existing) {
+      return existing;
+    }
+
+    return this._userOrg.model.userOrganization.create({
+      data: {
+        userId: user.id,
+        organizationId: orgId,
+        role,
+      },
+    });
+  }
+
+  async updateMemberRole(memberId: string, role: Role) {
+    return this._userOrg.model.userOrganization.update({
+      where: {
+        id: memberId,
+      },
+      data: {
+        role,
+      },
+      select: {
+        id: true,
+        role: true,
+      },
+    });
+  }
+
+  async setMemberPermissions(memberId: string, integrationIds: string[]) {
+    await this._userPermissions.model.userOrganizationIntegration.deleteMany({
+      where: {
+        userOrganizationId: memberId,
+      },
+    });
+
+    if (!integrationIds.length) {
+      return [];
+    }
+
+    await this._userPermissions.model.userOrganizationIntegration.createMany({
+      data: integrationIds.map((integrationId) => ({
+        userOrganizationId: memberId,
+        integrationId,
+      })),
+    });
+
+    return this._userPermissions.model.userOrganizationIntegration.findMany({
+      where: {
+        userOrganizationId: memberId,
+      },
+      select: {
+        integrationId: true,
       },
     });
   }

@@ -5,7 +5,6 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { groupBy, orderBy } from 'lodash';
 import { CalendarWeekProvider } from '@gitroom/frontend/components/launches/calendar.context';
-import { Filters } from '@gitroom/frontend/components/launches/filters';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import useSWR from 'swr';
 import { LoadingComponent } from '@gitroom/frontend/components/layout/loading';
@@ -17,7 +16,7 @@ import { Integration } from '@prisma/client';
 import ImageWithFallback from '@gitroom/react/helpers/image.with.fallback';
 import { useToaster } from '@gitroom/react/toaster/toaster';
 import { useFireEvents } from '@gitroom/helpers/utils/use.fire.events';
-import { Calendar } from './calendar';
+import { OrganizationPostForm } from '@gitroom/frontend/components/organizations/organization.post.form';
 import { useDrag, useDrop } from 'react-dnd';
 import { DNDProvider } from '@gitroom/frontend/components/launches/helpers/dnd.provider';
 import { GeneratorComponent } from './generator/generator';
@@ -573,10 +572,16 @@ export const LaunchesComponent = () => {
               : ''}
           </div>
         </div>
-        <div className="bg-newBgColorInner flex-1 flex-col flex p-[20px] gap-[12px]">
-          <Filters />
-          <div className="flex-1 flex">
-            <Calendar />
+        <div className="bg-newBgColorInner flex-1 flex-col flex p-[20px] gap-[24px] overflow-auto">
+          <div className="flex flex-col gap-[4px]">
+            <div className="text-[28px] font-semibold">Darch Poster</div>
+            <div className="text-newTextColor/70">
+              Submit content to your connected pages without the calendar.
+              Fields are tailored to your organization&apos;s subscription tier.
+            </div>
+          </div>
+          <div className="flex-1 overflow-auto">
+            <OrganizationPostForm />
           </div>
         </div>
       </CalendarWeekProvider>

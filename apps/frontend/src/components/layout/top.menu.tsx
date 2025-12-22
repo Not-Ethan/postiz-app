@@ -21,6 +21,27 @@ export const useMenuItem = () => {
 
   const firstMenu = [
     {
+      name: t('organizations', 'Organizations'),
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="21"
+          viewBox="0 0 20 21"
+          fill="none"
+        >
+          <path
+            d="M3.5 18.5H16.5M5 18.5V6.5M15 18.5V6.5M10 18.5V2.5M2.5 8.5H6.5M13.5 8.5H17.5M2.5 12.5H6.5M13.5 12.5H17.5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ),
+      path: '/organizations',
+    },
+    {
       name: isGeneral ? t('calendar', 'Calendar') : t('launches', 'Launches'),
       icon: (
         <svg

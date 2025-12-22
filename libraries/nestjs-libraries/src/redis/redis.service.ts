@@ -1,8 +1,13 @@
 import { Redis } from 'ioredis';
+import { EventEmitter } from 'events';
 
 // Create a mock Redis implementation for testing environments
-class MockRedis {
+class MockRedis extends EventEmitter {
   private data: Map<string, any> = new Map();
+
+  constructor() {
+    super();
+  }
 
   async get(key: string) {
     return this.data.get(key);

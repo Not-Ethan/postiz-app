@@ -135,6 +135,7 @@ model UserOrganization {
   role           Role         @default(USER)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+  pagePermissions UserOrganizationIntegration[]
 
   @@unique([userId, organizationId])
   @@index([disabled])
@@ -335,6 +336,7 @@ model Integration {
   rootInternalId        String?
   additionalSettings    String?                @default("[]")
   webhooks              IntegrationsWebhooks[]
+  userPagePermissions   UserOrganizationIntegration[]
 
   @@unique([organizationId, internalId])
   @@index([rootInternalId])
@@ -347,6 +349,20 @@ model Integration {
   @@index([inBetweenSteps])
   @@index([refreshNeeded])
   @@index([disabled])
+}
+
+model UserOrganizationIntegration {
+  id                  String            @id @default(uuid())
+  userOrganizationId  String
+  integrationId       String
+  canPublish          Boolean           @default(true)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  userOrganization    UserOrganization  @relation(fields: [userOrganizationId], references: [id], onDelete: Cascade)
+  integration         Integration       @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@unique([userOrganizationId, integrationId])
+  @@index([integrationId])
 }
 
 model Signatures {

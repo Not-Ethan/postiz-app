@@ -57,6 +57,13 @@ function LayoutContextInner(params: { children: ReactNode }) {
         window.location.href = '/';
         return true;
       }
+      const redirectTarget =
+        response?.headers?.get('redirect') ||
+        response?.headers?.get('Redirect');
+      if (redirectTarget) {
+        window.location.href = redirectTarget;
+        return false;
+      }
       const reloadOrOnboarding =
         response?.headers?.get('reload') ||
         response?.headers?.get('onboarding');

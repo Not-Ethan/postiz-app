@@ -44,7 +44,7 @@ export class UsersController {
   @Get('/self')
   async getSelf(
     @GetUserFromRequest() user: User,
-    @GetOrgFromRequest() organization: Organization,
+    @GetOrgFromRequest() organization: any,
     @Req() req: Request
   ) {
     if (!organization) {
@@ -70,6 +70,10 @@ export class UsersController {
       allowTrial: organization?.allowTrial,
       // @ts-ignore
       publicApi: organization?.users[0]?.role === 'SUPERADMIN' || organization?.users[0]?.role === 'ADMIN' ? organization?.apiKey : '',
+      accessibleIntegrations:
+        organization?.users[0]?.pagePermissions?.map(
+          (permission) => permission.integrationId
+        ) || [],
     };
   }
 

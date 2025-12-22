@@ -6,7 +6,7 @@ import { AddTeamMemberDto } from '@gitroom/nestjs-libraries/dtos/settings/add.te
 import { AuthService } from '@gitroom/helpers/auth/auth.service';
 import dayjs from 'dayjs';
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
-import { Organization } from '@prisma/client';
+import { Organization, Role } from '@prisma/client';
 import { AutopostService } from '@gitroom/nestjs-libraries/database/prisma/autopost/autopost.service';
 
 @Injectable()
@@ -109,6 +109,39 @@ export class OrganizationService {
     return this._organizationRepository.disableOrEnableNonSuperAdminUsers(
       orgId,
       disable
+    );
+  }
+
+  createOrgForUser(userId: string, name: string) {
+    return this._organizationRepository.createOrgForExistingUser(
+      userId,
+      name
+    );
+  }
+
+  joinOrganization(userId: string, organizationId: string) {
+    return this._organizationRepository.joinOrganization(
+      userId,
+      organizationId
+    );
+  }
+
+  addExistingUserByEmail(orgId: string, email: string, role: Role) {
+    return this._organizationRepository.addExistingUserByEmail(
+      orgId,
+      email,
+      role
+    );
+  }
+
+  updateMemberRole(memberId: string, role: Role) {
+    return this._organizationRepository.updateMemberRole(memberId, role);
+  }
+
+  setMemberPermissions(memberId: string, integrationIds: string[]) {
+    return this._organizationRepository.setMemberPermissions(
+      memberId,
+      integrationIds
     );
   }
 }

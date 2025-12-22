@@ -165,7 +165,7 @@ export class AuthController {
         }
       }
 
-      response.header('reload', 'true');
+      response.header('redirect', '/organizations');
       response.status(200).json({
         login: true,
       });

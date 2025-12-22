@@ -3,7 +3,7 @@ import { pricing } from '@gitroom/nestjs-libraries/database/prisma/subscriptions
 import { SubscriptionRepository } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/subscription.repository';
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
 import { OrganizationService } from '@gitroom/nestjs-libraries/database/prisma/organizations/organization.service';
-import { Organization } from '@prisma/client';
+import { Organization, SubscriptionTier } from '@prisma/client';
 import dayjs from 'dayjs';
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
 
@@ -245,6 +245,21 @@ export class SubscriptionService {
       null,
       undefined,
       orgId
+    );
+  }
+
+  async manualUpdateSubscription(
+    orgId: string,
+    tier: SubscriptionTier,
+    totalChannels?: number,
+    isLifetime?: boolean
+  ) {
+    const defaultChannels = totalChannels ?? pricing[tier]?.channel ?? 0;
+    return this._subscriptionRepository.setManualSubscription(
+      orgId,
+      tier,
+      defaultChannels,
+      !!isLifetime
     );
   }
 }

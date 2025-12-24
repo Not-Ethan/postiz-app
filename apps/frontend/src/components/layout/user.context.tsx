@@ -18,6 +18,7 @@ export const UserContext = createContext<
       impersonate: boolean;
       allowTrial: boolean;
       isTrailing: boolean;
+      admin?: boolean;
     })
 >(undefined);
 export const ContextWrapper: FC<{
@@ -27,6 +28,7 @@ export const ContextWrapper: FC<{
     role: 'USER' | 'ADMIN' | 'SUPERADMIN';
     publicApi: string;
     totalChannels: number;
+    admin?: boolean;
   };
   children: ReactNode;
 }> = ({ user, children }) => {

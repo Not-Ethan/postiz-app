@@ -13,6 +13,7 @@ interface MenuItemInterface {
   role?: string[];
   hide?: boolean;
   requireBilling?: boolean;
+  adminOnly?: boolean;
 }
 
 export const useMenuItem = () => {
@@ -271,6 +272,40 @@ export const useMenuItem = () => {
       path: '/settings',
       role: ['ADMIN', 'USER', 'SUPERADMIN'],
     },
+    {
+      name: 'Admin',
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="21"
+          viewBox="0 0 20 21"
+          fill="none"
+        >
+          <path
+            d="M10 2.5L16.5 5.5V10.5C16.5 14.3 13.8 17.7 10 18.5C6.2 17.7 3.5 14.3 3.5 10.5V5.5L10 2.5Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M10 7.5V11"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M10 14.25H10.01"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      ),
+      path: '/admin',
+      adminOnly: true,
+    },
   ] satisfies MenuItemInterface[] as MenuItemInterface[];
 
   return {
@@ -303,6 +338,9 @@ export const TopMenu: FC = () => {
                 if (f.name === 'Billing' && user?.isLifetime) {
                   return false;
                 }
+                if (f.adminOnly && !user?.admin) {
+                  return false;
+                }
                 if (f.role) {
                   return f.role.includes(user?.role!);
                 }
@@ -328,6 +366,9 @@ export const TopMenu: FC = () => {
               return false;
             }
             if (f.name === 'Billing' && user?.isLifetime) {
+              return false;
+            }
+            if (f.adminOnly && !user?.admin) {
               return false;
             }
             if (f.role) {

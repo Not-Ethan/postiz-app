@@ -68,6 +68,10 @@ export class PostsService {
     return this._postRepository.searchForMissingThreeHoursPosts();
   }
 
+  getAdminErrors(page: number, pageSize: number) {
+    return this._postRepository.getAdminErrors(page, pageSize);
+  }
+
   async getStatistics(orgId: string, id: string) {
     const getPost = await this.getPostsRecursively(id, true, orgId, true);
     const content = getPost.map((p) => p.content);

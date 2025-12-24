@@ -337,6 +337,59 @@ export class PostsRepository {
     });
   }
 
+  async getAdminErrors(page: number, pageSize: number) {
+    const safePage = Number.isFinite(page) && page > 0 ? page : 1;
+    const safePageSize =
+      Number.isFinite(pageSize) && pageSize > 0 ? Math.min(pageSize, 100) : 25;
+    const skip = (safePage - 1) * safePageSize;
+
+    const [total, errors] = await Promise.all([
+      this._errors.model.errors.count(),
+      this._errors.model.errors.findMany({
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: safePageSize,
+        select: {
+          id: true,
+          message: true,
+          body: true,
+          platform: true,
+          createdAt: true,
+          organization: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          post: {
+            select: {
+              id: true,
+              content: true,
+              publishDate: true,
+              state: true,
+              releaseURL: true,
+              integration: {
+                select: {
+                  name: true,
+                  providerIdentifier: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      total,
+      page: safePage,
+      pageSize: safePageSize,
+      errors,
+    };
+  }
+
   countPostsFromDay(orgId: string, date: Date) {
     return this._post.model.post.count({
       where: {

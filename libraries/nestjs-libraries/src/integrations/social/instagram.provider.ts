@@ -466,6 +466,7 @@ export class InstagramProvider
     const isReel = firstPost.settings.post_type === 'reel';
     const medias = await Promise.all(
       firstPost?.media?.map(async (m) => {
+        await this.preflightMediaUrl(m.path);
         const caption =
           firstPost.media?.length === 1
             ? `&caption=${encodeURIComponent(firstPost.message)}`
@@ -643,6 +644,40 @@ export class InstagramProvider
     }
 
     return arr;
+  }
+
+  private async preflightMediaUrl(path: string) {
+    if (!path || path.indexOf('http') !== 0) {
+      return;
+    }
+
+    const maxAttempts = 3;
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      if (attempt > 0) {
+        await timer(1000 * attempt);
+      }
+
+      try {
+        const head = await fetch(path, { method: 'HEAD' });
+        if (head.ok) {
+          return;
+        }
+      } catch (err) {
+        // ignore and try GET below
+      }
+
+      try {
+        const get = await fetch(path, {
+          method: 'GET',
+          headers: { Range: 'bytes=0-1' },
+        });
+        if (get.ok) {
+          return;
+        }
+      } catch (err) {
+        // ignore and retry
+      }
+    }
   }
 
   private setTitle(name: string) {

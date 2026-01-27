@@ -114,53 +114,57 @@ export class PostsService {
               integration.providerIdentifier === 'instagram-standalone') &&
             (post.settings as any)?.cover_url
           ) {
-            const response = await axios.get((post.settings as any).cover_url, {
-              responseType: 'arraybuffer',
-            });
+            try {
+              const response = await axios.get((post.settings as any).cover_url, {
+                responseType: 'arraybuffer',
+              });
 
-            if (!response.headers['content-type']?.startsWith('image/')) {
-              throw new BadRequestException(
-                'The cover_url did not point to a valid image.'
-              );
+              // If cover_url is not an image (e.g., a video), remove it
+              // Instagram will fall back to using thumb_offset to auto-generate thumbnail
+              if (!response.headers['content-type']?.startsWith('image/')) {
+                delete (post.settings as any).cover_url;
+              } else {
+                const processedBuffer = await sharp(Buffer.from(response.data))
+                  .resize(1080, 1920, {
+                    fit: 'cover',
+                    position: 'center',
+                  })
+                  .toColourspace('srgb')
+                  .jpeg({ quality: 90 })
+                  .toBuffer();
+
+                // If processed image is too large, remove cover_url and let Instagram auto-generate
+                if (processedBuffer.length > 8 * 1024 * 1024) {
+                  delete (post.settings as any).cover_url;
+                } else {
+                  const { path } = await this.storage.uploadFile({
+                    buffer: processedBuffer,
+                    mimetype: 'image/jpeg',
+                    size: processedBuffer.length,
+                    path: '',
+                    fieldname: '',
+                    destination: '',
+                    stream: new Readable(),
+                    filename: `${makeId(20)}.jpg`,
+                    originalname: `${makeId(20)}.jpg`,
+                    encoding: '',
+                  });
+
+                  (post.settings as any).cover_url =
+                    path.indexOf('http') === -1
+                      ? process.env.FRONTEND_URL +
+                        '/' +
+                        (process.env.NEXT_PUBLIC_UPLOAD_STATIC_DIRECTORY ||
+                          'uploads') +
+                        '/' +
+                        path
+                      : path;
+                }
+              }
+            } catch (err) {
+              // If we can't fetch/process cover_url, remove it and let Instagram auto-generate
+              delete (post.settings as any).cover_url;
             }
-
-            const processedBuffer = await sharp(Buffer.from(response.data))
-              .resize(1080, 1920, {
-                fit: 'cover',
-                position: 'center',
-              })
-              .toColourspace('srgb')
-              .jpeg({ quality: 90 })
-              .toBuffer();
-
-            if (processedBuffer.length > 8 * 1024 * 1024) {
-              throw new BadRequestException(
-                'Cover image is too large. Maximum size is 8MB.'
-              );
-            }
-
-            const { path } = await this.storage.uploadFile({
-              buffer: processedBuffer,
-              mimetype: 'image/jpeg',
-              size: processedBuffer.length,
-              path: '',
-              fieldname: '',
-              destination: '',
-              stream: new Readable(),
-              filename: `${makeId(20)}.jpg`,
-              originalname: `${makeId(20)}.jpg`,
-              encoding: '',
-            });
-
-            (post.settings as any).cover_url =
-              path.indexOf('http') === -1
-                ? process.env.FRONTEND_URL +
-                  '/' +
-                  (process.env.NEXT_PUBLIC_UPLOAD_STATIC_DIRECTORY ||
-                    'uploads') +
-                  '/' +
-                  path
-                : path;
           }
 
           return {

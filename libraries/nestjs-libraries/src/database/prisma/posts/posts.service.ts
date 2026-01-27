@@ -110,7 +110,8 @@ export class PostsService {
           }
 
           if (
-            integration.providerIdentifier === 'instagram' &&
+            (integration.providerIdentifier === 'instagram' ||
+              integration.providerIdentifier === 'instagram-standalone') &&
             (post.settings as any)?.cover_url
           ) {
             const response = await axios.get((post.settings as any).cover_url, {
